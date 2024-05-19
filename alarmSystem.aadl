@@ -1,0 +1,214 @@
+package alarmSystem
+public
+	
+	with Data_Model;
+	
+	data shock_event
+		properties
+			Data_Model::Data_Representation => Boolean;
+	end shock_event;
+	
+	data motion_event
+		properties
+			Data_Model::Data_Representation => Boolean;
+	end motion_event;
+	
+	data camera_on_off
+		properties
+			Data_Model::Data_Representation => Boolean;
+	end camera_on_off;
+	
+	data alarm_on_off
+		properties
+			Data_Model::Data_Representation => Boolean;
+	end alarm_on_off;
+	
+	data notifier_on_off
+		properties
+			Data_Model::Data_Representation => Boolean;
+	end notifier_on_off;
+	
+	data video_data
+		properties
+			Data_Model::Data_Representation => Integer;
+        	Data_Model::Number_Representation => Signed;
+        	Data_Size => 2_764_800 Bytes; -- size of one video frame (HD)
+	end video_data;
+	
+	thread detector
+		features
+			in_window_info: in data port shock_event;
+			in_door_info: in data port shock_event;
+			in_motion_info: in data port motion_event;
+			turn_on_alarm: out data port alarm_on_off;
+			turn_on_notifier: out data port notifier_on_off;
+	end detector;
+	
+	thread notifier
+		features
+			notify_security: in data port notifier_on_off;
+			save_video_to_cloud: in data port video_data;
+	end notifier;
+	
+	thread video_converter
+		features
+			process_video: in data port video_data;
+			send_video: out data port video_data;
+	end video_converter;
+	
+	thread main
+		features
+			stop_alarm: in data port alarm_on_off;
+			start_alarm: in data port alarm_on_off;
+			turn_on_off_alarm: out data port alarm_on_off;
+			turn_on_off_camera: out data port camera_on_off;
+	end main;
+	
+	process main_process
+		features
+			in_window_info: in data port shock_event;
+			in_door_info: in data port shock_event;
+			in_motion_info: in data port motion_event;
+			stop_alarm: in data port alarm_on_off;
+			turn_on_off_alarm: out data port alarm_on_off;
+			turn_on_off_camera: out data port camera_on_off;
+			save_video: in data port video_data;
+	end main_process;
+	
+	process implementation main_process.impl
+		subcomponents
+			thr_detector: thread detector;
+			thr_notifier: thread notifier;
+			thr_video_converter: thread video_converter;
+			thr_main: thread main;
+		connections
+			window_conn: port in_window_info -> thr_detector.in_window_info;
+			door_conn: port in_door_info -> thr_detector.in_door_info;
+			motion_conn: port in_motion_info -> thr_detector.in_motion_info;
+			stop_conn: port stop_alarm -> thr_main.stop_alarm;
+			alarm_conn: port thr_main.turn_on_off_alarm -> turn_on_off_alarm;
+			camera_conn: port thr_main.turn_on_off_camera -> turn_on_off_camera;
+			save_video_conn: port save_video -> thr_video_converter.process_video;
+			notifier_conn: port thr_detector.turn_on_notifier -> thr_notifier.notify_security;
+			inner_alarm_conn: port thr_detector.turn_on_alarm -> thr_main.start_alarm;
+			inner_save_video_conn: port thr_video_converter.send_video -> thr_notifier.save_video_to_cloud;
+	end main_process.impl;
+		
+	device window_shock_sensor_1
+		features
+			out_sensor_info: out data port shock_event;
+	end window_shock_sensor_1;
+	
+	device window_shock_sensor_2
+		features
+			out_sensor_info: out data port shock_event;
+	end window_shock_sensor_2;
+	
+	device window_shock_sensor_3
+		features
+			out_sensor_info: out data port shock_event;
+	end window_shock_sensor_3;
+	
+	device door_shock_sensor
+		features
+			out_sensor_info: out data port shock_event;
+	end door_shock_sensor;
+	
+	device motion_sensor
+		features
+			out_motion_info: out data port motion_event;
+	end motion_sensor;
+	
+	device alarm
+		features
+			turn_on_off_alarm: in data port alarm_on_off;
+	end alarm;
+	
+	device camera
+		features
+			turn_on_off_camera: in data port camera_on_off;
+			save_video: out data port video_data;
+	end camera;
+	
+	device control_panel
+		features
+			stop_alarm: out data port alarm_on_off;
+	end control_panel;
+	
+	device router
+		features
+			eth: requires bus access ethernet;
+	end router;
+	
+	processor CPU
+		features
+    		busAccess: requires bus access SATA;
+    		eth: requires bus access ethernet;
+	end CPU;
+	
+	memory SSD
+		features
+			busAccess: requires bus access SATA;
+	end SSD;
+	
+	bus ethernet
+	end ethernet;
+	
+	bus SATA
+	end SATA;
+	
+	system alarmSystem
+	end alarmSystem;
+	
+	system implementation alarmSystem.impl
+		subcomponents 
+			main_process: process main_process.impl;
+			window_shock_sensor_1: device window_shock_sensor_1;
+			window_shock_sensor_2: device window_shock_sensor_2;
+			window_shock_sensor_3: device window_shock_sensor_3;
+			door_shock_sensor: device door_shock_sensor;
+			motion_sensor: device motion_sensor;
+			alarm: device alarm;
+			camera: device camera;
+			control_panel: device control_panel;
+			router: device router;
+			CPU: processor CPU;
+			SSD: memory SSD;
+			ethernet: bus ethernet;
+			SATA: bus SATA;
+		connections
+			window_conn_1: port window_shock_sensor_1.out_sensor_info -> main_process.in_window_info;
+			window_conn_2: port window_shock_sensor_2.out_sensor_info -> main_process.in_window_info;
+			window_conn_3: port window_shock_sensor_3.out_sensor_info -> main_process.in_window_info;
+			door_conn: port door_shock_sensor.out_sensor_info -> main_process.in_door_info;
+			motion_conn: port motion_sensor.out_motion_info -> main_process.in_motion_info;
+			alarm_conn: port main_process.turn_on_off_alarm -> alarm.turn_on_off_alarm;
+			camera_switch_conn: port main_process.turn_on_off_camera -> camera.turn_on_off_camera;
+			camera_save_conn: port camera.save_video -> main_process.save_video;
+			control_conn: port control_panel.stop_alarm -> main_process.stop_alarm;
+			memory_connection: bus access SATA <-> SSD.busAccess;
+			CPU_memory_conn: bus access SATA <-> CPU.busAccess;
+			CPU_ethernet_conn: bus access ethernet <-> CPU.eth;
+			router_conn: bus access ethernet <-> router.eth;
+		properties
+			Actual_Processor_Binding => (reference(CPU)) applies to main_process;
+			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_1;
+			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_2;
+			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_3;
+			Actual_Connection_Binding  => (reference(SATA)) applies to door_conn;
+			Actual_Connection_Binding  => (reference(SATA)) applies to motion_conn;
+			Actual_Connection_Binding  => (reference(SATA)) applies to alarm_conn;
+			Actual_Connection_Binding  => (reference(SATA)) applies to camera_switch_conn;
+			Actual_Connection_Binding  => (reference(SATA)) applies to camera_save_conn;
+			Actual_Connection_Binding  => (reference(SATA)) applies to control_conn;
+			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_1;
+			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_2;
+			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_3;
+			Actual_Memory_Binding  => (reference(SSD)) applies to door_shock_sensor;
+			Actual_Memory_Binding  => (reference(SSD)) applies to motion_sensor;
+			Actual_Memory_Binding  => (reference(SSD)) applies to alarm;
+			Actual_Memory_Binding  => (reference(SSD)) applies to camera;
+			Actual_Memory_Binding  => (reference(SSD)) applies to control_panel;
+	end alarmSystem.impl;
+	
+end alarmSystem;
