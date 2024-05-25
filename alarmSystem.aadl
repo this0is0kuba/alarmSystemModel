@@ -37,7 +37,9 @@ public
 	
 	thread detector
 		features
-			in_window_info: in data port shock_event;
+			in_window_info_1: in data port shock_event;
+			in_window_info_2: in data port shock_event;
+			in_window_info_3: in data port shock_event;
 			in_door_info: in data port shock_event;
 			in_motion_info: in data port motion_event;
 			turn_on_alarm: out data port alarm_on_off;
@@ -66,7 +68,9 @@ public
 	
 	process main_process
 		features
-			in_window_info: in data port shock_event;
+			in_window_info_1: in data port shock_event;
+			in_window_info_2: in data port shock_event;
+			in_window_info_3: in data port shock_event;
 			in_door_info: in data port shock_event;
 			in_motion_info: in data port motion_event;
 			stop_alarm: in data port alarm_on_off;
@@ -82,7 +86,9 @@ public
 			thr_video_converter: thread video_converter;
 			thr_main: thread main;
 		connections
-			window_conn: port in_window_info -> thr_detector.in_window_info;
+			window_conn_1: port in_window_info_1 -> thr_detector.in_window_info_1;
+			window_conn_2: port in_window_info_2 -> thr_detector.in_window_info_2;
+			window_conn_3: port in_window_info_3 -> thr_detector.in_window_info_3;
 			door_conn: port in_door_info -> thr_detector.in_door_info;
 			motion_conn: port in_motion_info -> thr_detector.in_motion_info;
 			stop_conn: port stop_alarm -> thr_main.stop_alarm;
@@ -177,9 +183,9 @@ public
 			ethernet: bus ethernet;
 			SATA: bus SATA;
 		connections
-			window_conn_1: port window_shock_sensor_1.out_sensor_info -> main_process.in_window_info;
-			window_conn_2: port window_shock_sensor_2.out_sensor_info -> main_process.in_window_info;
-			window_conn_3: port window_shock_sensor_3.out_sensor_info -> main_process.in_window_info;
+			window_conn_1: port window_shock_sensor_1.out_sensor_info -> main_process.in_window_info_1;
+			window_conn_2: port window_shock_sensor_2.out_sensor_info -> main_process.in_window_info_2;
+			window_conn_3: port window_shock_sensor_3.out_sensor_info -> main_process.in_window_info_3;
 			door_conn: port door_shock_sensor.out_sensor_info -> main_process.in_door_info;
 			motion_conn: port motion_sensor.out_motion_info -> main_process.in_motion_info;
 			alarm_conn: port main_process.turn_on_off_alarm -> alarm.turn_on_off_alarm;
