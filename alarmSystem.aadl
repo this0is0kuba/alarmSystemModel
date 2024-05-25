@@ -1,6 +1,8 @@
 package alarmSystem
 public
 	
+	with SEI;
+	
 	with Data_Model;
 	
 	data shock_event
@@ -103,58 +105,80 @@ public
 	device window_shock_sensor_1
 		features
 			out_sensor_info: out data port shock_event;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_1;
 	
 	device window_shock_sensor_2
 		features
 			out_sensor_info: out data port shock_event;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_2;
 	
 	device window_shock_sensor_3
 		features
 			out_sensor_info: out data port shock_event;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_3;
 	
 	device door_shock_sensor
 		features
 			out_sensor_info: out data port shock_event;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end door_shock_sensor;
 	
 	device motion_sensor
 		features
 			out_motion_info: out data port motion_event;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end motion_sensor;
 	
 	device alarm
 		features
 			turn_on_off_alarm: in data port alarm_on_off;
+		properties
+			SEI::GrossWeight => 0.1kg;
 	end alarm;
 	
 	device camera
 		features
 			turn_on_off_camera: in data port camera_on_off;
 			save_video: out data port video_data;
+		properties
+			SEI::GrossWeight => 0.5kg;
 	end camera;
 	
 	device control_panel
 		features
 			stop_alarm: out data port alarm_on_off;
+		properties
+			SEI::GrossWeight => 0.5kg;
 	end control_panel;
 	
 	device router
 		features
 			eth: requires bus access ethernet;
+		properties
+			SEI::GrossWeight => 0.5kg;
 	end router;
 	
 	processor CPU
 		features
     		busAccess: requires bus access SATA;
     		eth: requires bus access ethernet;
+		properties
+			SEI::GrossWeight => 0.05kg;
 	end CPU;
 	
 	memory SSD
 		features
 			busAccess: requires bus access SATA;
+		properties
+			SEI::GrossWeight => 0.05kg;
 	end SSD;
 	
 	bus ethernet
@@ -215,6 +239,7 @@ public
 			Actual_Memory_Binding  => (reference(SSD)) applies to alarm;
 			Actual_Memory_Binding  => (reference(SSD)) applies to camera;
 			Actual_Memory_Binding  => (reference(SSD)) applies to control_panel;
+			SEI::WeightLimit => 5.0kg;
 	end alarmSystem.impl;
 	
 end alarmSystem;
