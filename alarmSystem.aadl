@@ -5,9 +5,9 @@ public
 	
 	with Data_Model;
 	
-	data shock_event
+	data shock_event	
 		properties
-			Data_Model::Data_Representation => Boolean;
+			Data_Model::Data_Representation => Boolean;			
 	end shock_event;
 	
 	data motion_event
@@ -78,7 +78,7 @@ public
 			stop_alarm: in data port alarm_on_off;
 			turn_on_off_alarm: out data port alarm_on_off;
 			turn_on_off_camera: out data port camera_on_off;
-			save_video: in data port video_data;
+			save_video: in data port video_data; 
 	end main_process;
 	
 	process implementation main_process.impl
@@ -104,7 +104,8 @@ public
 		
 	device window_shock_sensor_1
 		features
-			out_sensor_info: out data port shock_event;
+			out_sensor_info: out data port shock_event; 
+			i2c_access: requires bus access I2C;	
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_1;
@@ -112,6 +113,7 @@ public
 	device window_shock_sensor_2
 		features
 			out_sensor_info: out data port shock_event;
+			i2c_access: requires bus access I2C;
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_2;
@@ -119,6 +121,7 @@ public
 	device window_shock_sensor_3
 		features
 			out_sensor_info: out data port shock_event;
+			i2c_access: requires bus access I2C;
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end window_shock_sensor_3;
@@ -126,6 +129,7 @@ public
 	device door_shock_sensor
 		features
 			out_sensor_info: out data port shock_event;
+			i2c_access: requires bus access I2C;
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end door_shock_sensor;
@@ -133,6 +137,7 @@ public
 	device motion_sensor
 		features
 			out_motion_info: out data port motion_event;
+			i2c_access: requires bus access I2C;
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end motion_sensor;
@@ -140,6 +145,7 @@ public
 	device alarm
 		features
 			turn_on_off_alarm: in data port alarm_on_off;
+			usb_port: requires bus access USB;
 		properties
 			SEI::GrossWeight => 0.1kg;
 	end alarm;
@@ -148,6 +154,7 @@ public
 		features
 			turn_on_off_camera: in data port camera_on_off;
 			save_video: out data port video_data;
+			usb_port: requires bus access USB;
 		properties
 			SEI::GrossWeight => 0.5kg;
 	end camera;
@@ -155,6 +162,7 @@ public
 	device control_panel
 		features
 			stop_alarm: out data port alarm_on_off;
+			usb_port: requires bus access USB;
 		properties
 			SEI::GrossWeight => 0.5kg;
 	end control_panel;
@@ -170,6 +178,8 @@ public
 		features
     		busAccess: requires bus access SATA;
     		eth: requires bus access ethernet;
+    		usb_port: requires bus access USB;
+    		i2c_access: requires bus access I2C;
 		properties
 			SEI::GrossWeight => 0.05kg;
 	end CPU;
@@ -182,10 +192,29 @@ public
 	end SSD;
 	
 	bus ethernet
+		properties
+			SEI::GrossWeight => 0.01kg;
 	end ethernet;
 	
 	bus SATA
+		properties
+			SEI::GrossWeight => 0.01kg;
 	end SATA;
+	
+	bus DDR4
+		properties
+			SEI::GrossWeight => 0.01kg;
+	end DDR4;
+	
+	bus USB
+		properties
+			SEI::GrossWeight => 0.01kg;
+	end USB;
+	
+	bus I2C
+		properties
+			SEI::GrossWeight => 0.01kg;
+	end I2C;
 	
 	system alarmSystem
 	end alarmSystem;
@@ -206,6 +235,8 @@ public
 			SSD: memory SSD;
 			ethernet: bus ethernet;
 			SATA: bus SATA;
+			I2C: bus I2C;
+			USB: bus USB;
 		connections
 			window_conn_1: port window_shock_sensor_1.out_sensor_info -> main_process.in_window_info_1;
 			window_conn_2: port window_shock_sensor_2.out_sensor_info -> main_process.in_window_info_2;
@@ -220,17 +251,27 @@ public
 			CPU_memory_conn: bus access SATA <-> CPU.busAccess;
 			CPU_ethernet_conn: bus access ethernet <-> CPU.eth;
 			router_conn: bus access ethernet <-> router.eth;
+			USB_camera_conn: bus access camera.usb_port -> USB;
+			USB_alarm_conn: bus access alarm.usb_port -> USB;
+			USB_control_conn: bus access control_panel.usb_port -> USB;
+			USB_CPU_conn: bus access USB -> CPU.usb_port;
+			I2C_window_1_conn: bus access window_shock_sensor_1.i2c_access -> I2C;
+			I2C_window_2_conn: bus access window_shock_sensor_2.i2c_access -> I2C;
+			I2C_window_3_conn: bus access window_shock_sensor_3.i2c_access -> I2C;
+			I2C_door_conn: bus access door_shock_sensor.i2c_access -> I2C;
+			I2C_motion_conn: bus access motion_sensor.i2c_access -> I2C;
+			I2C_CPU_conn: bus access I2C -> CPU.i2c_access;
 		properties
 			Actual_Processor_Binding => (reference(CPU)) applies to main_process;
-			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_1;
-			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_2;
-			Actual_Connection_Binding  => (reference(SATA)) applies to window_conn_3;
-			Actual_Connection_Binding  => (reference(SATA)) applies to door_conn;
-			Actual_Connection_Binding  => (reference(SATA)) applies to motion_conn;
-			Actual_Connection_Binding  => (reference(SATA)) applies to alarm_conn;
-			Actual_Connection_Binding  => (reference(SATA)) applies to camera_switch_conn;
-			Actual_Connection_Binding  => (reference(SATA)) applies to camera_save_conn;
-			Actual_Connection_Binding  => (reference(SATA)) applies to control_conn;
+			Actual_Connection_Binding  => (reference(I2C)) applies to window_conn_1;
+			Actual_Connection_Binding  => (reference(I2C)) applies to window_conn_2;
+			Actual_Connection_Binding  => (reference(I2C)) applies to window_conn_3;
+			Actual_Connection_Binding  => (reference(I2C)) applies to door_conn;
+			Actual_Connection_Binding  => (reference(I2C)) applies to motion_conn;
+			Actual_Connection_Binding  => (reference(USB)) applies to alarm_conn;
+			Actual_Connection_Binding  => (reference(USB)) applies to camera_switch_conn;
+			Actual_Connection_Binding  => (reference(USB)) applies to camera_save_conn;
+			Actual_Connection_Binding  => (reference(USB)) applies to control_conn;
 			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_1;
 			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_2;
 			Actual_Memory_Binding  => (reference(SSD)) applies to window_shock_sensor_3;
@@ -239,6 +280,20 @@ public
 			Actual_Memory_Binding  => (reference(SSD)) applies to alarm;
 			Actual_Memory_Binding  => (reference(SSD)) applies to camera;
 			Actual_Memory_Binding  => (reference(SSD)) applies to control_panel;
+			
+			Actual_Connection_Binding => (reference(I2C)) applies to main_process.window_conn_1;
+			Actual_Connection_Binding => (reference(I2C)) applies to main_process.window_conn_2;
+			Actual_Connection_Binding => (reference(I2C)) applies to main_process.window_conn_3;
+			Actual_Connection_Binding => (reference(I2C)) applies to main_process.door_conn;
+			Actual_Connection_Binding => (reference(I2C)) applies to main_process.motion_conn;
+			Actual_Connection_Binding => (reference(USB)) applies to main_process.stop_conn;
+			Actual_Connection_Binding => (reference(USB)) applies to main_process.alarm_conn;
+			Actual_Connection_Binding => (reference(USB)) applies to main_process.camera_conn;
+			Actual_Connection_Binding => (reference(USB)) applies to main_process.save_video_conn;
+			Actual_Connection_Binding => (reference(SATA)) applies to main_process.notifier_conn;
+			Actual_Connection_Binding => (reference(SATA)) applies to main_process.inner_alarm_conn;
+			Actual_Connection_Binding => (reference(SATA)) applies to main_process.inner_save_video_conn;
+			
 			SEI::WeightLimit => 5.0kg;
 	end alarmSystem.impl;
 	
